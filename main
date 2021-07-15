@@ -1,0 +1,68 @@
+//Constants
+int solenoidPin = 4;              // Arduino output pin for SOLENOID
+int val = 0;                     // Value for storing moisture value 
+int soilPin = A0;                // Declare a variable for the soil moisture sensor 
+int soilPower = 7;               // Variable for Soil moisture Power
+int water_minutes = 
+
+
+void setup() {
+  // put your setup code here, to run once:
+pinMode(solenoidPin, OUTPUT);     // Sets the pin as an output
+
+//Serial.begin(9600);   // open serial over USB for testing
+
+pinMode(soilPower, OUTPUT);       // Set D7 as an OUTPUT
+digitalWrite(soilPower, LOW);     // Set to LOW so no power is flowing through the sensor
+}
+
+/* Loop will count poll the current time against the previous time that the main program ran. 
+ * Code will run once a day at the same time each day, this time is initialized on a fresh powerup of the Arduino.
+ * Once running, code will check the soil sensor module and if the reading is below the limit we are happy with it
+ * will call the water() method, which opens the solenoid value to allow drip irrigation of trees with drip valves.
+ */
+
+void loop()
+{
+  //Previous time
+  static uint32_t prevTime;
+  //Current time is the number of milliseconds passed since the Arduino board began running the current program. 
+  
+  uint32_t currTime = millis(300000);   //1000 = 1 second 60000 = 1 minute CURRENT VALUE 5 MINUTES
+
+//if the current time is greater or equal to 24 hours. (86,400,000)
+  if ( currTime - prevTime >= 24*60*60*1000UL )
+  {
+    //Store it as the previous time
+    prevTime = currTime;
+    
+//Print to serial port for testing
+//    Serial.print("Soil Moisture = ");    
+//    //get soil moisture value from the function below and print it
+//    Serial.println(readSoil());
+
+    //Check the soil, If it is dry call water method
+    if ( readSoil() >= 300){
+      water();
+      }     
+  }
+}
+
+// Method to get the soil moisture content
+int readSoil(){
+
+    digitalWrite(soilPower, HIGH);    //turn D7 "On"
+    delay(10);                        //wait 10 milliseconds 
+    val = analogRead(soilPin);        //Read the SIG value form sensor 
+    digitalWrite(soilPower, LOW);     //turn D7 "Off"
+    return val;                       //send current moisture value
+}
+
+// Method for activating the solenoid valve. Delay will hold valve open for val in water_minutes
+void water(){
+  
+  digitalWrite(solenoidPin, HIGH);    //Switch Solenoid ON
+  delay(water_minutes);               //Change up top to adjust watering times.
+  digitalWrite(solenoidPin, LOW);     //Switch Solenoid OFF
+  
+  }
